@@ -26,6 +26,8 @@ export function TokenCard({ token, priceData }: TokenCardProps) {
     return '$' + mc.toFixed(0);
   };
 
+  const pumpUrl = "https://pump.fun/coin/" + token.address;
+
   return (
     <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700 hover:border-purple-500 transition-all hover:shadow-[0_0_20px_rgba(124,58,237,0.3)]">
       <div className="text-4xl mb-3">{token.emoji}</div>
@@ -41,15 +43,14 @@ export function TokenCard({ token, priceData }: TokenCardProps) {
         </div>
         <div className="flex justify-between">
           <span className="text-gray-500">24h</span>
-          <span className={`font-mono ${
-            priceData?.change24h && priceData.change24h > 0 
-              ? 'text-green-400' 
+          <span className={priceData?.change24h && priceData.change24h > 0 
+              ? 'text-green-400 font-mono' 
               : priceData?.change24h && priceData.change24h < 0 
-                ? 'text-red-400' 
-                : 'text-gray-400'
-          }`}>
+                ? 'text-red-400 font-mono' 
+                : 'text-gray-400 font-mono'
+          }>
             {priceData?.change24h !== undefined 
-              ? `${priceData.change24h > 0 ? '+' : ''}${priceData.change24h.toFixed(2)}%`
+              ? (priceData.change24h > 0 ? '+' : '') + priceData.change24h.toFixed(2) + '%'
               : '--'}
           </span>
         </div>
@@ -62,7 +63,7 @@ export function TokenCard({ token, priceData }: TokenCardProps) {
       </div>
 
       <a 
-        href={\`https://pump.fun/coin/\${token.address}\`}
+        href={pumpUrl}
         target="_blank"
         rel="noopener noreferrer"
         className="mt-4 block w-full text-center bg-purple-600 hover:bg-purple-500 text-white py-2 rounded-lg transition-colors"
