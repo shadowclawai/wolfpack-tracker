@@ -5,25 +5,38 @@ export async function GET() {
   try {
     const prices: Record<string, any> = {};
     
-    // Fetch from DexScreener for each token
+    // Fetch from pump.fun API for each token
     for (const token of WOLF_PACK_TOKENS) {
       if (!token.address) continue;
       
       try {
         const res = await fetch(
-          `https://api.dexscreener.com/latest/dex/tokens/${token.address}`,
+          `https://frontend-api-v3.pump.fun/coins/${token.address}`,
           { next: { revalidate: 60 } } // Cache for 60 seconds
         );
+        
+        if (!res.ok) {
+          console.error(`Failed to fetch ${token.ticker}: ${res.status}`);
+          continue;
+        }
+        
         const data = await res.json();
         
-        if (data.pairs && data.pairs.length > 0) {
-          const pair = data.pairs[0];
+        if (data && data.usd_market_cap !== undefined) {
+          // Calculate price from market cap and supply
+          // total_supply is in raw units (with 6 decimals for pump.fun tokens)
+          const totalSupply = data.total_supply / 1e6;
+          const price = data.usd_market_cap / totalSupply;
+          
           prices[token.ticker] = {
-            price: pair.priceUsd || '0',
-            change24h: pair.priceChange?.h24 || 0,
-            volume24h: pair.volume?.h24 || 0,
-            liquidity: pair.liquidity?.usd || 0,
-            marketCap: pair.marketCap || 0,
+            price: price.toString(),
+            marketCap: data.usd_market_cap || 0,
+            complete: data.complete || false, // graduated to raydium
+            athMarketCap: data.ath_market_cap || 0,
+            virtualSolReserves: data.virtual_sol_reserves || 0,
+            virtualTokenReserves: data.virtual_token_reserves || 0,
+            realSolReserves: data.real_sol_reserves || 0,
+            lastTradeTimestamp: data.last_trade_timestamp || 0,
           };
         }
       } catch (e) {
